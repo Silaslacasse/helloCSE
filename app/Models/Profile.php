@@ -11,8 +11,8 @@ class Profile extends Model
     use HasApiTokens, HasFactory;
 
     protected $fillable = [
-        'name',
-        'firsrtName',
+        'name', 
+        'firstName',
         'imagePath',
         'status',
     ];

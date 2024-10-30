@@ -6,58 +6,62 @@ use App\Models\Profile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreProfileRequest;
+use App\DTO\ProfileDTO;
 
 class ProfileController extends Controller
 {
 
-    public function index()
+    public function getAllProfiles()
     {
-        $profiles = Profile::where('status', 'actif')->get(['id', 'name', 'firstName', 'imagePath', 'created_at', 'updated_at']);
+        if (auth('sanctum')->check()) {
+            // If the user is logged in, retrieve all profiles
+            $profiles = Profile::all(['id', 'name', 'firstName', 'imagePath', 'status', 'created_at', 'updated_at']);
+        } else {
+            // If the user is not logged in, retrieve only profiles with active status
+            $profiles = Profile::where('status', 'active')
+                ->get(['id', 'name', 'firstName', 'imagePath', 'created_at', 'updated_at']);
+        }
 
         return response()->json($profiles);
     }
 
-    public function store(Request $request)
+    public function getProfileById($id)
     {
-        return "coucou";
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'firstName' => 'required|string|max:255',
-            'imagePath' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-            'status' => 'in:inactive,pending,active',
-        ]);
+        $profiles = Profile::where('id', $id)->get(['id', 'name', 'firstName', 'imagePath', 'created_at', 'updated_at']);
 
-        //$path = $request->file('imagePath')->store('profile-imagePath', 'public');
-
-        $profile = Profile::create([
-            'name' => $validated['name'],
-            'firstName' => $validated['firstName'],
-            'imagePath' => $validated['imagePath'],
-            'status' => $validated['status'] ?? 'inactive',
-        ]);
-
-        return response()->json($profile, 201);
+        return response()->json($profiles);
     }
 
-    public function update(Request $request, $id)
+    public function store(StoreProfileRequest $request)
+    {
+
+        $profileDTO = new ProfileDTO(
+            $request->input('name'),
+            $request->input('firstName'),
+            $request->input('imagePath'),
+            $request->input('status', 'inactive')
+        );
+    
+        $profile = Profile::create((array)$profileDTO); 
+        return response()->json($profile, 201);
+
+    }
+
+    public function update(StoreProfileRequest $request, $id)
     {
         $profile = Profile::findOrFail($id);
 
-        $validated = $request->validate([
-            'name' => 'string|max:255',
-            'firstName' => 'string|max:255',
-            'imagePath' => 'image|mimes:jpeg,png,jpg|max:2048',
-            'status' => 'in:inactive,pending,active',
-        ]);
+        $validated = $request->validated();
 
-        if ($request->hasFile('imagePath')) {
-            // Supprime l'ancienne image
-            Storage::disk('public')->delete($profile->image);
-            $path = $request->file('imagePath')->store('profile-imagePath', 'public');
-            $profile->image = $path;
-        }
+        $profileDTO = new ProfileDTO(
+            $validated['name'] ?? $profile->name,
+            $validated['firstName'] ?? $profile->firstName,
+            $validated['imagePath'] ?? $profile->imagePath,
+            $validated['status'] ?? $profile->status
+        );
 
-        $profile->update(array_filter($validated));
+        $profile->update(array_filter($profileDTO));
 
         return response()->json($profile);
     }
@@ -65,9 +69,6 @@ class ProfileController extends Controller
     public function destroy($id)
     {
         $profile = Profile::findOrFail($id);
-
-        // Supprimer l'image associée
-        Storage::disk('public')->delete($profile->image);
 
         $profile->delete();
 
