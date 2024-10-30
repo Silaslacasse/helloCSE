@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('profils', function (Blueprint $table) {
+        Schema::create('profiles', function (Blueprint $table) {
             $table->id();
-            $table->string('nom');
-            $table->string('prenom');
+            $table->string('name');
+            $table->string('firstName');
             $table->string('imagePath');
-            $table->enum('statut', ['inactif', 'en attente', 'actif'])->default('inactif');
+            $table->enum('status', ['inactive', 'pending', 'active'])->default('inactive');
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('profils');
+        Schema::dropIfExists('profiles');
     }
 };

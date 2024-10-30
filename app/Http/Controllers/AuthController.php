@@ -59,47 +59,4 @@ class AuthController extends Controller
             'token_type' => 'Bearer',
         ]);
     }
-
-    public function index()
-    {
-        $profils = Profil::where('statut', 'actif')->get(['id', 'nom', 'prenom', 'image', 'created_at', 'updated_at']);
-
-        return response()->json($profils);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $profil = Profil::findOrFail($id);
-
-        $validated = $request->validate([
-            'nom' => 'string|max:255',
-            'prenom' => 'string|max:255',
-            'image' => 'image|mimes:jpeg,png,jpg|max:2048',
-            'statut' => 'in:inactif,en attente,actif',
-        ]);
-
-        if ($request->hasFile('image')) {
-            // Supprime l'ancienne image
-            Storage::disk('public')->delete($profil->image);
-            $path = $request->file('image')->store('images', 'public');
-            $profil->image = $path;
-        }
-
-        $profil->update(array_filter($validated));
-
-        return response()->json($profil);
-    }
-
-    public function destroy($id)
-    {
-        $profil = Profil::findOrFail($id);
-
-        // Supprimer l'image associée
-        Storage::disk('public')->delete($profil->image);
-
-        $profil->delete();
-
-        return response()->json(['message' => 'Profil supprimé avec succès']);
-    }
-
 }
