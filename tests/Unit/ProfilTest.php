@@ -6,9 +6,11 @@ use App\Models\Profile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use App\Models\Admin;
+use Laravel\Sanctum\Sanctum;
 
 class ProfilTest extends TestCase
 {
+    use RefreshDatabase;
 
     private $admin;
 
@@ -33,88 +35,75 @@ class ProfilTest extends TestCase
 
         $response->assertStatus(201);
 
-        $this->assertDatabaseHas('profile', $profileData);
+        $this->assertDatabaseHas('profiles', $profileData);
     }
 
     /** @test */
-    // public function it_can_get_all_profiles()
-    // {
-    //     $profiles = Profile::factory()->count(5)->create();
+    public function it_can_get_all_profiles()
+    {
+        $admin = Admin::factory()->create();
+        Sanctum::actingAs($admin);
 
-    //     $response = $this->get('/api/profiles');
+        $profiles = Profile::factory()->count(3)->create();
 
-    //     $response->assertStatus(200);
-    //     $response->assertJsonCount(5);
-    // }
+        $response = $this->get('/api/profiles');
 
-    // /** @test */
-    // public function it_can_get_a_profile_by_id()
-    // {
-    //     $profile = Profile::factory()->create();
+        $response->assertStatus(200);
+        $response->assertJsonCount(3);
+    }
 
-    //     $response = $this->get('/api/profile/' . $profile->id);
+    /** @test */
+    public function it_can_update_a_profile()
+    {
+        $admin = Admin::factory()->create();
+        Sanctum::actingAs($admin);
 
-    //     $response->assertStatus(200);
-    //     $response->assertJson([
-    //         'id' => $profile->id,
-    //         'name' => $profile->name,
-    //         'firstName' => $profile->firstName,
-    //         'imagePath' => $profile->imagePath,
-    //     ]);
-    // }
+        $profile = Profile::factory()->create([
+            'name' => 'Original Name',
+            'firstName' => 'Original FirstName',
+            'imagePath' => 'http://example.com/original_image.jpg',
+            'status' => 'active',
+        ]);
+    
+        $response = $this->put('/api/profile/' . $profile->id, [
+            'name' => 'Updated Name',
+            'firstName' => 'Updated FirstName',
+            'imagePath' => 'http://example.com/updated_image.jpg',
+            'status' => 'inactive',
+        ]);
+    
+        $response->assertStatus(200);
+    
+        $this->assertDatabaseHas('profiles', [
+            'id' => $profile->id,
+            'name' => 'Updated Name',
+            'firstName' => 'Updated FirstName',
+            'imagePath' => 'http://example.com/updated_image.jpg',
+            'status' => 'inactive',
+        ]);
+    
+        $response->assertJson([
+            'id' => $profile->id,
+            'name' => 'Updated Name',
+            'firstName' => 'Updated FirstName',
+            'imagePath' => 'http://example.com/updated_image.jpg',
+            'status' => 'inactive',
+        ]);
+    }
 
-    // /** @test */
-    // public function it_can_update_a_profile()
-    // {
-    //     $profile = Profile::factory()->create();
+    /** @test */
+    public function it_can_delete_a_profile()
+    {
+        $admin = Admin::factory()->create();
+        Sanctum::actingAs($admin);
 
-    //     $this->actingAs($this->admin);
+        $profile = Profile::factory()->create();
 
-    //     $response = $this->put('/api/profile/' . $profile->id, [
-    //         'name' => 'Jane',
-    //         'firstName' => 'Doe',
-    //         'imagePath' => 'http://example.com/image_updated.jpg',
-    //         'status' => 'inactive',
-    //     ]);
+        $response = $this->delete('/api/profile/' . $profile->id);
 
-    //     $response->assertStatus(200);
-    //     $this->assertDatabaseHas('profile', [
-    //         'id' => $profile->id,
-    //         'name' => 'Jane',
-    //         'firstName' => 'Doe',
-    //         'imagePath' => 'http://example.com/image_updated.jpg',
-    //         'status' => 'inactive',
-    //     ]);
-    // }
-
-    // /** @test */
-    // public function it_can_delete_a_profile()
-    // {
-    //     $profile = Profile::factory()->create();
-
-    //     $this->actingAs($this->admin);
-
-    //     $response = $this->delete('/api/profile/' . $profile->id);
-
-    //     $response->assertStatus(200);
-    //     $this->assertDatabaseMissing('profile', [
-    //         'id' => $profile->id,
-    //     ]);
-    // }
-
-    // /** @test */
-    // public function it_validates_profile_fields_when_storing()
-    // {
-    //     $this->actingAs($this->admin);
-
-    //     $response = $this->post('/api/profile', [
-    //         'name' => '',
-    //         'firstName' => '',
-    //         'imagePath' => 'invalid-url',
-    //         'status' => 'invalid-status',
-    //     ]);
-
-    //     $response->assertStatus(422);
-    //     $this->assertArrayHasKey('errors', $response->json());
-    // }
+        $response->assertStatus(200);
+        $this->assertDatabaseMissing('profiles', [
+            'id' => $profile->id,
+        ]);
+    }
 }

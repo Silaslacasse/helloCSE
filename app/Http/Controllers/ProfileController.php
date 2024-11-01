@@ -13,6 +13,12 @@ use App\Services\ProfileLogger;
 
 class ProfileController extends Controller
 {
+    protected $profileLogger;
+
+    public function __construct(ProfileLogger $profileLogger)
+    {
+        $this->profileLogger = $profileLogger;
+    }
 
     public function getAllProfiles()
     {
@@ -68,7 +74,7 @@ class ProfileController extends Controller
 
         $this->profileLogger->logUpdate($profile);
 
-        $profile->update(array_filter($profileDTO));
+        $profile->update(array_filter((array)$profileDTO));
 
         return response()->json($profile);
     }
@@ -78,7 +84,7 @@ class ProfileController extends Controller
         $profile = Profile::findOrFail($id);
 
         $this->profileLogger->logDeletion($profile);
-        
+
         $profile->delete();
 
         return response()->json(['message' => 'Profile sucessfuly deleted']);
