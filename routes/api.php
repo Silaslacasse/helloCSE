@@ -6,10 +6,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/profiles', [ProfileController::class, 'store']);
-    Route::put('/profiles/{id}', [ProfileController::class, 'update']);
-    Route::delete('/profiles/{id}', [ProfileController::class, 'destroy']);
-    Route::get('/profiles/{id}', [ProfileController::class, 'getProfileById']);
+    Route::post('/profile', [ProfileController::class, 'store']);
+    Route::put('/profile/{id}', [ProfileController::class, 'update']);
+    Route::delete('/profile/{id}', [ProfileController::class, 'destroy']);
+    Route::get('/profile/{id}', [ProfileController::class, 'getProfileById']);
 });
 
 Route::get('/profiles', [ProfileController::class, 'getAllProfiles']);

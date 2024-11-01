@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProfileRequest;
 use App\DTO\ProfileDTO;
+use App\Services\ProfileLogger;
+
 
 class ProfileController extends Controller
 {
@@ -44,6 +46,9 @@ class ProfileController extends Controller
         );
     
         $profile = Profile::create((array)$profileDTO); 
+
+        $this->profileLogger->logCreation($profile);
+
         return response()->json($profile, 201);
 
     }
@@ -61,6 +66,8 @@ class ProfileController extends Controller
             $validated['status'] ?? $profile->status
         );
 
+        $this->profileLogger->logUpdate($profile);
+
         $profile->update(array_filter($profileDTO));
 
         return response()->json($profile);
@@ -70,6 +77,8 @@ class ProfileController extends Controller
     {
         $profile = Profile::findOrFail($id);
 
+        $this->profileLogger->logDeletion($profile);
+        
         $profile->delete();
 
         return response()->json(['message' => 'Profile sucessfuly deleted']);
