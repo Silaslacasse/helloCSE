@@ -35,7 +35,7 @@ class ProfileController extends Controller
             $request->input('name'),
             $request->input('firstName'),
             $request->input('imagePath'),
-            $request->input('status', 'inactive')
+            $request->input('status', 'active')
         );
 
         $profile = $this->profileService->createProfile($profileDTO);
